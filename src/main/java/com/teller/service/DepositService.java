@@ -1,15 +1,22 @@
 package com.teller.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
 import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
+import com.teller.utils.EncryptAmountUtils;
+import io.netty.util.internal.StringUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepositService {
@@ -17,13 +24,14 @@ public class DepositService {
     private final AccountRepository accountRepository;
 
     public TellerResponse deposit(DepositRequest request) throws CommonException {
-        validateDepositRequest(request);
+        validateDepositRequest(request.getAmount(), request.getAccountId());
 
         try {
             Account account = accountRepository.findByAccountId(request.getAccountId());
-            if (account == null) {
-                return createResponse(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc());
+            if (Objects.isNull(account)) {
+                return createResponse(ResponseCode.NOT_FOUND_ACCOUNT.getCode(), ResponseCode.NOT_FOUND_ACCOUNT.getDesc());
             }
+
             account.setAmount(account.getAmount() + request.getAmount());
             accountRepository.save(account);
             return createResponse(ResponseCode.SUCCESS_DEPOSIT.getCode(), ResponseCode.SUCCESS_DEPOSIT.getDesc());
@@ -39,8 +47,8 @@ public class DepositService {
         }
     }
 
-    private void validateDepositRequest(DepositRequest request) throws CommonException {
-        if (request.getAmount() <= 0) {
+    private void validateDepositRequest(double amount, String accountId) throws CommonException {
+        if (amount <= 0) {
             throw new CommonException(
                     ResponseCode.INVALID_AMOUNT.getCode(),
                     ResponseCode.INVALID_AMOUNT.getDesc(),
@@ -48,7 +56,7 @@ public class DepositService {
                     HttpStatus.FORBIDDEN
             );
         }
-        if (request.getAccountId() == null || request.getAccountId().isEmpty()) {
+        if (StringUtil.isNullOrEmpty(accountId)) {
             throw new CommonException(
                     ResponseCode.NOT_FOUND_ACCOUNT.getCode(),
                     ResponseCode.NOT_FOUND_ACCOUNT.getDesc(),

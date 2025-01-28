@@ -4,35 +4,49 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-
-import java.security.Key;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 
+@Component
 public class TokenUtil {
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
+    @Value("${jwt.secret-key}")
+    private String secretKey;
 
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public static String generateToken(String crmId) {
+    public String generateToken(String crmId) {
+        System.out.println("Generated Secret Key: " + generateSecretKey());
         return Jwts.builder()
                 .setSubject(crmId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
-    public static String validateToken(String token) {
+    public String validateToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
+                    .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+            if (claims.getExpiration().before(new Date())) {
+                throw new JwtException("Token has expired");
+            }
             return claims.getSubject();
         } catch (JwtException e) {
             throw new IllegalArgumentException("Invalid token");
         }
+    }
+
+    public static String generateSecretKey() {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] key = new byte[32];  // 32 bytes = 256 bits
+        secureRandom.nextBytes(key);
+        return Base64.getEncoder().encodeToString(key);  // คีย์จะถูกเข้ารหัสในรูปแบบ Base64
     }
 }

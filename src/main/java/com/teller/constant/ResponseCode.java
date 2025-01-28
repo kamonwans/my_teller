@@ -16,7 +16,8 @@ public enum ResponseCode implements Serializable {
     NOT_FOUND("403", "failed", "ยอดเงินไม่เพียงพอ"),
     NOT_FOUND_ACCOUNT("403", "failed", "ไม่พบบัญชี"),
     INVALID_AMOUNT("403", "failed", "จำนวนเงินถอนไม่ถูกต้อง จำนวนเงินต้องมากกว่า 0"),
-    DB_FAILED("001", "Database error", "Cannot do this transaction");
+    DB_FAILED("001", "Database error", "Cannot do this transaction"),
+    INVALID_TOKEN("009", "Token", "Invalid token");
 
 
     private final String code;
