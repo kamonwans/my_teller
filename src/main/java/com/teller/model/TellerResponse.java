@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TellerResponse {
+public class TellerResponse<T>  {
     private String code;
     private String status;
 }
