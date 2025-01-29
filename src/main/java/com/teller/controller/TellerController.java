@@ -41,7 +41,6 @@ public class TellerController {
             tellerResponse.setCode(ResponseCode.SUCCESS_DEPOSIT.getCode());
             return ResponseEntity.ok().body(deposit);
         } catch (CommonException e) {
-            ResponseEntity
             throw e;
         }
     }
