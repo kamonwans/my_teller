@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Component
 public class TokenUtil {
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60;
+    private static final long EXPIRATION_TIME = 1000 * 60 * 10;
     @Value("${jwt.secret-key}")
     private String secretKey;
 
@@ -45,8 +45,8 @@ public class TokenUtil {
 
     public static String generateSecretKey() {
         SecureRandom secureRandom = new SecureRandom();
-        byte[] key = new byte[32];  // 32 bytes = 256 bits
+        byte[] key = new byte[32];
         secureRandom.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);  // คีย์จะถูกเข้ารหัสในรูปแบบ Base64
+        return Base64.getEncoder().encodeToString(key);
     }
 }

@@ -12,5 +12,5 @@ public class WithdrawRequest {
     @NotEmpty
     private String accountId;
     @NotNull
-    private Integer amount;
+    private double amount;
 }

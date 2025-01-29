@@ -39,8 +39,8 @@ public class WithdrawService {
         Map<String, String> response = new HashMap<>();
 
         if (!accountTransfer.getAccountId().equals(request.getAccountId())) {
-            response.put("code", ResponseCode.NOT_FOUND_ACCOUNT.getCode());
-            response.put("desc", ResponseCode.NOT_FOUND_ACCOUNT.getDesc());
+            response.put("code", ResponseCode.FAILED.getCode());
+            response.put("desc", ResponseCode.FAILED.getDesc());
             return response;
         }
         if (request.getAmount() <= 0) {
@@ -55,6 +55,7 @@ public class WithdrawService {
         }
         return null;
     }
+
     private void performWithdrawal(Account accountTransfer, double amount) {
         log.info("Before withdrawal: {}", accountTransfer.getAmount());
         accountTransfer.setAmount(accountTransfer.getAmount() - amount);

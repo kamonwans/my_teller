@@ -3,7 +3,6 @@ package com.teller.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teller.model.AmountModel;
-import com.teller.model.CrmIdModel;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,9 +19,9 @@ public class EncryptAmountUtils {
 
     public static double decryptAmount(String encryptAmount) throws JsonProcessingException {
         byte[] decode = Base64.getDecoder().decode(encryptAmount);
-        String decodedString = new String(decode);  // แปลงเป็น String
+        String decodedString = new String(decode);
         ObjectMapper objectMapper = new ObjectMapper();
         AmountModel amountModel = objectMapper.readValue(decodedString, AmountModel.class);
-        return Double.parseDouble(amountModel.getAmount());  // แปลงเป็น double
+        return Double.parseDouble(amountModel.getAmount());
     }
 }

@@ -26,7 +26,6 @@ public class ValidateTokenService {
         ObjectMapper objectMapper = new ObjectMapper();
         CrmIdModel crmIdModel = objectMapper.readValue(crmId, CrmIdModel.class);
 
-        System.out.println("crmId: " + crmIdModel.getCrmId());
         Account repositoryByCrmId = accountRepository.findByCrmId(crmIdModel.getCrmId());
 
         if (!Objects.nonNull(repositoryByCrmId)) {
@@ -38,8 +37,6 @@ public class ValidateTokenService {
             );
         }
 
-        return Objects.nonNull(repositoryByCrmId);
+        return true;
     }
-
-
 }

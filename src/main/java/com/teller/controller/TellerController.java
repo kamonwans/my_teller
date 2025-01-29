@@ -41,6 +41,7 @@ public class TellerController {
             tellerResponse.setCode(ResponseCode.SUCCESS_DEPOSIT.getCode());
             return ResponseEntity.ok().body(deposit);
         } catch (CommonException e) {
+            ResponseEntity
             throw e;
         }
     }
@@ -65,7 +66,7 @@ public class TellerController {
 
     private String extractBearerToken(String authorizationHeader) throws CommonException {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7);  // Remove "Bearer " prefix
+            return authorizationHeader.substring(7);
         } else {
             throw new CommonException(
                     ResponseCode.INVALID_TOKEN.getCode(),
