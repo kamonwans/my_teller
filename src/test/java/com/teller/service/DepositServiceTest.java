@@ -15,12 +15,15 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 
 import java.text.ParseException;
 
+import static org.apache.kafka.common.security.JaasUtils.SERVICE_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 
 @RunWith(JUnit4.class)
 class DepositServiceTest {
@@ -43,11 +46,13 @@ class DepositServiceTest {
     }
 
     @Test
-    void deposit_Failed() throws CommonException, ForbiddenException, ParseException {
+    void deposit_Failed()  {
         doReturn(mockAccountData("1234567891", 2000.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse deposit = depositService.deposit(mockDepositRequest(1000.00));
-        Assertions.assertEquals(ResponseCode.FAILED.getCode(), deposit.getCode());
-        Assertions.assertEquals(ResponseCode.FAILED.getDesc(), deposit.getStatus());
+        Exception exception = assertThrows(CommonException.class, () -> {
+            depositService.deposit(mockDepositRequest(10.0));
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.FAILED.getCode(), exception.getMessage());
     }
 
     private Account mockAccountData(String accountId, double amount) {

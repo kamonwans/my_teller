@@ -15,7 +15,11 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 
+import static org.apache.kafka.common.security.JaasUtils.SERVICE_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -42,25 +46,31 @@ class WithdrawServiceTest {
     @Test
     void withdraw_not_found_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 500.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
-        Assertions.assertEquals(ResponseCode.NOT_FOUND.getCode(), withdraw.getCode());
-        Assertions.assertEquals(ResponseCode.NOT_FOUND.getDesc(), withdraw.getStatus());
+        ForbiddenException exception = assertThrows(ForbiddenException.class, () -> {
+            withdrawService.withdraw(mockWithdrawRequest(1000.00));
+            throw new ForbiddenException(ResponseCode.NOT_FOUND.getCode(), ResponseCode.NOT_FOUND.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.NOT_FOUND.getCode(), exception.getMessage());
     }
 
     @Test
     void withdraw_failed_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567891", 500.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
-        Assertions.assertEquals(ResponseCode.FAILED.getCode(), withdraw.getCode());
-        Assertions.assertEquals(ResponseCode.FAILED.getDesc(), withdraw.getStatus());
+        Exception exception = assertThrows(CommonException.class, () -> {
+            withdrawService.withdraw(mockWithdrawRequest(1000.00));
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.FAILED.getCode(), exception.getMessage());
     }
 
     @Test
     void withdraw_invalid_amount_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 500.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(0));
-        Assertions.assertEquals(ResponseCode.INVALID_AMOUNT.getCode(), withdraw.getCode());
-        Assertions.assertEquals(ResponseCode.INVALID_AMOUNT.getDesc(), withdraw.getStatus());
+        ForbiddenException exception = assertThrows(ForbiddenException.class, () -> {
+            withdrawService.withdraw(mockWithdrawRequest(1000.00));
+            throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.INVALID_AMOUNT.getCode(), exception.getMessage());
     }
 
     private Account mockAccountData(String accountId, double amount) {

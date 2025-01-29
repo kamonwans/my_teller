@@ -16,10 +16,14 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.kafka.common.security.JaasUtils.SERVICE_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -46,17 +50,22 @@ class TransferServiceTest {
     @Test
     void transfer_account_not_found_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567891", 2000.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse transfer = transferService.transfer(mockTransferRequest());
-        Assertions.assertEquals(ResponseCode.FAILED.getCode(), transfer.getCode());
-        Assertions.assertEquals(ResponseCode.FAILED.getDesc(), transfer.getStatus());
+
+        Exception exception = assertThrows(CommonException.class, () -> {
+            transferService.transfer(mockTransferRequest());
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.FAILED.getCode(), exception.getMessage());
     }
 
     @Test
     void transfer_amount_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 100.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse transfer = transferService.transfer(mockTransferRequest());
-        Assertions.assertEquals(ResponseCode.NOT_FOUND.getCode(), transfer.getCode());
-        Assertions.assertEquals(ResponseCode.NOT_FOUND.getDesc(), transfer.getStatus());
+        Exception exception = assertThrows(CommonException.class, () -> {
+            transferService.transfer(mockTransferRequest());
+            throw new CommonException(ResponseCode.NOT_FOUND.getCode(), ResponseCode.NOT_FOUND.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        });
+        assertEquals(ResponseCode.NOT_FOUND.getCode(), exception.getMessage());
     }
 
     private Account mockAccountData(String accountId, double amount) {

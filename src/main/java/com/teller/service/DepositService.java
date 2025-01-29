@@ -13,11 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.text.ParseException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Objects;
 
 import static com.teller.utils.CommonUtils.getCalendarDateWithoutTime;
@@ -39,9 +35,9 @@ public class DepositService {
         return createResponse(ResponseCode.SUCCESS_DEPOSIT.getCode(), ResponseCode.SUCCESS_DEPOSIT.getDesc());
     }
 
-    private void validateDepositRequest(double amount, String accountId, Account accountDeposit) throws CommonException {
+    private void validateDepositRequest(double amount, String accountId, Account accountDeposit) throws CommonException, ForbiddenException {
         if (amount <= 0) {
-            throw new CommonException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+            throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
         }
 
         if (StringUtil.isNullOrEmpty(accountId)) {

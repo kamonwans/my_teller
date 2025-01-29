@@ -27,7 +27,6 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private static final String SERVICE_NAME = "teller-service";
 
-    @SneakyThrows
     public TellerResponse transfer(TransferRequest request) throws ForbiddenException, CommonException {
         TellerResponse response = new TellerResponse();
 

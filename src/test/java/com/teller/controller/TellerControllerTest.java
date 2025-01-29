@@ -57,7 +57,7 @@ class TellerControllerTest {
         TellerResponse tellerResponse = mockTellerDepositSuccess();
         doReturn(tellerResponse).when(withdrawService).withdraw(any());
         doReturn(true).when(validateTokenService).validateToken(anyString());
-        ResponseEntity<TellerResponse> responseEntity = tellerController.withdraw("Bearer N3T_OB9Q0", new WithdrawRequest());
+        ResponseEntity<TellerResponse<TellerResponse>> responseEntity = tellerController.withdraw("Bearer N3T_OB9Q0", new WithdrawRequest());
         Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assertions.assertNotNull(responseEntity);
     }
@@ -67,7 +67,7 @@ class TellerControllerTest {
         TellerResponse tellerResponse = mockTellerDepositSuccess();
         doReturn(true).when(validateTokenService).validateToken(anyString());
         doReturn(tellerResponse).when(transferService).transfer(any());
-        ResponseEntity<TellerResponse> responseEntity = tellerController.transfer("Bearer N3T_OB9Q0", new TransferRequest());
+        ResponseEntity<TellerResponse<TellerResponse>> responseEntity = tellerController.transfer("Bearer N3T_OB9Q0", new TransferRequest());
         Assertions.assertNotNull(responseEntity);
     }
 

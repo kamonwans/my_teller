@@ -43,20 +43,16 @@ public class TellerController {
             return ResponseEntity.ok().body(deposit);
 
         } catch (ForbiddenException ex) {
-            tellerResponse.setCode(ex.getErrorCode());
-            tellerResponse.setStatus(ex.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.FORBIDDEN);
+            return handleForbiddenException(ex, tellerResponse);
 
         } catch (CommonException e) {
-            tellerResponse.setCode(e.getErrorCode());
-            tellerResponse.setStatus(e.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.BAD_REQUEST);
+            return handleCommonException(e, tellerResponse);
         }
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<TellerResponse> withdraw(@RequestHeader(value = "Authorization") String authorizationHeader,
-                                                   @RequestBody WithdrawRequest request) throws CommonException, JsonProcessingException, ForbiddenException {
+    public ResponseEntity<TellerResponse<TellerResponse>> withdraw(@RequestHeader(value = "Authorization") String authorizationHeader,
+                                                   @RequestBody WithdrawRequest request) throws Exception {
         TellerResponse<TellerResponse> tellerResponse = new TellerResponse<>();
         String token = extractBearerToken(authorizationHeader);
 
@@ -68,19 +64,15 @@ public class TellerController {
             return ResponseEntity.ok().body(withdraw);
 
         } catch (ForbiddenException ex) {
-            tellerResponse.setCode(ex.getErrorCode());
-            tellerResponse.setStatus(ex.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.FORBIDDEN);
+            return handleForbiddenException(ex, tellerResponse);
 
         } catch (CommonException e) {
-            tellerResponse.setCode(e.getErrorCode());
-            tellerResponse.setStatus(e.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.BAD_REQUEST);
+            return handleCommonException(e, tellerResponse);
         }
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<TellerResponse> transfer(@RequestHeader(value = "Authorization") String authorizationHeader,
+    public ResponseEntity<TellerResponse<TellerResponse>> transfer(@RequestHeader(value = "Authorization") String authorizationHeader,
                                                    @RequestBody TransferRequest request) throws CommonException, JsonProcessingException {
         String token = extractBearerToken(authorizationHeader);
         TellerResponse<TellerResponse> tellerResponse = new TellerResponse<>();
@@ -93,16 +85,18 @@ public class TellerController {
             return ResponseEntity.ok().body(transfer);
 
         } catch (ForbiddenException ex) {
-            tellerResponse.setCode(ex.getErrorCode());
-            tellerResponse.setStatus(ex.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.FORBIDDEN);
+            return handleForbiddenException(ex, tellerResponse);
 
         } catch (CommonException e) {
-            tellerResponse.setCode(e.getErrorCode());
-            tellerResponse.setStatus(e.getErrorMessage());
-            return new ResponseEntity<>(tellerResponse, HttpStatus.BAD_REQUEST);
+            return handleCommonException(e, tellerResponse);
         }
 
+    }
+
+    private static ResponseEntity<TellerResponse<TellerResponse>> handleCommonException(CommonException e, TellerResponse<TellerResponse> tellerResponse) {
+        tellerResponse.setCode(e.getErrorCode());
+        tellerResponse.setStatus(e.getErrorMessage());
+        return new ResponseEntity<>(tellerResponse, HttpStatus.BAD_REQUEST);
     }
 
     private String extractBearerToken(String authorizationHeader) throws CommonException {
@@ -117,4 +111,11 @@ public class TellerController {
             );
         }
     }
+
+    private static ResponseEntity<TellerResponse<TellerResponse>> handleForbiddenException(ForbiddenException ex, TellerResponse<TellerResponse> tellerResponse) {
+        tellerResponse.setCode(ex.getErrorCode());
+        tellerResponse.setStatus(ex.getErrorMessage());
+        return new ResponseEntity<>(tellerResponse, HttpStatus.FORBIDDEN);
+    }
+
 }
