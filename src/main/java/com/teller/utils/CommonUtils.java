@@ -7,6 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Objects;
+
 public class CommonUtils {
 
     public static String formatBankAccountNo(String accountId) throws CommonException {
@@ -23,5 +30,9 @@ public class CommonUtils {
         }catch (Exception e) {
             throw new CommonException(ResponseCode.FAILED.getCode(), "data is wrong", "teller", HttpStatus.BAD_REQUEST, e);
         }
+    }
+
+    public static Timestamp getCalendarDateWithoutTime() {
+        return new Timestamp(System.currentTimeMillis());
     }
 }

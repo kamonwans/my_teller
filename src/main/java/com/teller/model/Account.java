@@ -9,6 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @ToString
@@ -26,4 +28,8 @@ public class Account {
     private String accountName;
     @Field("amount")
     private double amount;
+    @Field("createDate")
+    private Date createDate;
+    @Field("updateDate")
+    private Date updateDate;
 }

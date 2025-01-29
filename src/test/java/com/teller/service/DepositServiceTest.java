@@ -6,6 +6,7 @@ import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
+import com.teller.utils.ForbiddenException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.text.ParseException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -33,14 +36,14 @@ class DepositServiceTest {
 
 
     @Test
-    void deposit_Success() throws CommonException {
+    void deposit_Success() throws CommonException, ForbiddenException, ParseException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
         TellerResponse withdraw = depositService.deposit(mockDepositRequest(1000.00));
         Assertions.assertNotNull(withdraw);
     }
 
     @Test
-    void deposit_Failed() throws CommonException {
+    void deposit_Failed() throws CommonException, ForbiddenException, ParseException {
         doReturn(mockAccountData("1234567891", 2000.00)).when(accountRepository).findByAccountId(any());
         TellerResponse deposit = depositService.deposit(mockDepositRequest(1000.00));
         Assertions.assertEquals(ResponseCode.FAILED.getCode(), deposit.getCode());

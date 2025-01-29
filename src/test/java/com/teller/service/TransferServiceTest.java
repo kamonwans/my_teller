@@ -6,6 +6,8 @@ import com.teller.model.TellerResponse;
 import com.teller.model.TransferRequest;
 import com.teller.model.TransferToAccountRequest;
 import com.teller.repository.AccountRepository;
+import com.teller.utils.CommonException;
+import com.teller.utils.ForbiddenException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,14 +37,14 @@ class TransferServiceTest {
 
 
     @Test
-    void transfer_Success() {
+    void transfer_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
         TellerResponse transfer = transferService.transfer(mockTransferRequest());
         Assertions.assertNotNull(transfer);
     }
 
     @Test
-    void transfer_account_not_found_Success() {
+    void transfer_account_not_found_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567891", 2000.00)).when(accountRepository).findByAccountId(any());
         TellerResponse transfer = transferService.transfer(mockTransferRequest());
         Assertions.assertEquals(ResponseCode.FAILED.getCode(), transfer.getCode());
@@ -50,7 +52,7 @@ class TransferServiceTest {
     }
 
     @Test
-    void transfer_amount_Success() {
+    void transfer_amount_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 100.00)).when(accountRepository).findByAccountId(any());
         TellerResponse transfer = transferService.transfer(mockTransferRequest());
         Assertions.assertEquals(ResponseCode.NOT_FOUND.getCode(), transfer.getCode());

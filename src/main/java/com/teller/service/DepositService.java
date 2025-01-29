@@ -6,14 +6,21 @@ import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
+import com.teller.utils.ForbiddenException;
 import io.netty.util.internal.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Objects;
+
+import static com.teller.utils.CommonUtils.getCalendarDateWithoutTime;
 
 @Slf4j
 @Service
@@ -21,66 +28,37 @@ import java.util.Map;
 public class DepositService {
 
     private final AccountRepository accountRepository;
+    private static final String SERVICE_NAME = "teller-service";
 
-    public TellerResponse deposit(DepositRequest request) throws CommonException {
-        validateDepositRequest(request.getAmount(), request.getAccountId());
+    public TellerResponse deposit(DepositRequest request) throws CommonException, ForbiddenException, ParseException {
 
         Account accountDeposit = accountRepository.findByAccountId(request.getAccountId());
-        Map<String, String> validationError = validateWithdrawRequest(request, accountDeposit);
-        if (validationError != null) {
-            return createResponse(validationError.get("code"), validationError.get("desc"));
-        }
+        validateDepositRequest(request.getAmount(), request.getAccountId(), accountDeposit);
 
         updateDeposit(accountDeposit, request.getAmount());
         return createResponse(ResponseCode.SUCCESS_DEPOSIT.getCode(), ResponseCode.SUCCESS_DEPOSIT.getDesc());
     }
 
-    private void validateDepositRequest(double amount, String accountId) throws CommonException {
+    private void validateDepositRequest(double amount, String accountId, Account accountDeposit) throws CommonException {
         if (amount <= 0) {
-            throw new CommonException(
-                    ResponseCode.INVALID_AMOUNT.getCode(),
-                    ResponseCode.INVALID_AMOUNT.getDesc(),
-                    "teller-service",
-                    HttpStatus.FORBIDDEN
-            );
+            throw new CommonException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
 
         if (StringUtil.isNullOrEmpty(accountId)) {
-            throw new CommonException(
-                    ResponseCode.FAILED.getCode(),
-                    ResponseCode.FAILED.getDesc(),
-                    "teller-service",
-                    HttpStatus.FORBIDDEN
-            );
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+
+        if (Objects.isNull(accountDeposit) || !accountId.equals(accountDeposit.getAccountId())) {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
     }
 
-    private Map<String, String> validateWithdrawRequest(DepositRequest request, Account accountTransfer) {
-        Map<String, String> response = new HashMap<>();
-
-        if (!accountTransfer.getAccountId().equals(request.getAccountId())) {
-            response.put("code", ResponseCode.FAILED.getCode());
-            response.put("desc", ResponseCode.FAILED.getDesc());
-            return response;
-        }
-        if (request.getAmount() <= 0) {
-            response.put("code", ResponseCode.INVALID_AMOUNT.getCode());
-            response.put("desc", ResponseCode.INVALID_AMOUNT.getDesc());
-            return response;
-        }
-        if (request.getAmount() > accountTransfer.getAmount()) {
-            response.put("code", ResponseCode.NOT_FOUND.getCode());
-            response.put("desc", ResponseCode.NOT_FOUND.getDesc());
-            return response;
-        }
-        return null;
-    }
-
-    private void updateDeposit(Account accountTransfer, double amount) {
-        log.info("Before withdrawal: {}", accountTransfer.getAmount());
-        accountTransfer.setAmount(accountTransfer.getAmount() - amount);
-        accountRepository.save(accountTransfer);
-        log.info("After withdrawal: {}",accountTransfer.getAmount() );
+    private void updateDeposit(Account accountDeposit, double amount) throws ParseException {
+        log.info("Before withdrawal: {}", accountDeposit.getAmount());
+        accountDeposit.setAmount(accountDeposit.getAmount() + amount);
+        accountDeposit.setUpdateDate(getCalendarDateWithoutTime());
+        accountRepository.save(accountDeposit);
+        log.info("After withdrawal: {}", accountDeposit.getAmount());
     }
 
     private TellerResponse createResponse(String code, String status) {

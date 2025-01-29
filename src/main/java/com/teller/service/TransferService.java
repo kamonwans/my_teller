@@ -6,64 +6,112 @@ import com.teller.model.TellerResponse;
 import com.teller.model.TransferRequest;
 import com.teller.model.TransferToAccountRequest;
 import com.teller.repository.AccountRepository;
+import com.teller.utils.CommonException;
+import com.teller.utils.ForbiddenException;
+import io.netty.util.internal.StringUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Objects;
+
+import static com.teller.utils.CommonUtils.getCalendarDateWithoutTime;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransferService {
     private final AccountRepository accountRepository;
+    private static final String SERVICE_NAME = "teller-service";
 
-    public TellerResponse transfer(TransferRequest request) {
+    @SneakyThrows
+    public TellerResponse transfer(TransferRequest request) throws ForbiddenException, CommonException {
         TellerResponse response = new TellerResponse();
 
-        double totalAmount = request.getTransferToAccountRequestList()
+        double totalAmount = calculateAmountTransToAccounts(request);
+        Account accountTransfer = fetchAccount(request.getFromAccountId());
+        validateTransfer(totalAmount, request.getFromAccountId(), accountTransfer);
+
+        if (accountTransfer.getAccountId().equals(request.getFromAccountId())) {
+            for (TransferToAccountRequest accountTo : request.getTransferToAccountRequestList()) {
+                Account accountToUpdate = fetchAccount(accountTo.getToAccountId());
+                if (Objects.isNull(accountToUpdate)) {
+                    handleExceptionError();
+                } else {
+                    filterAccountAndUpdateToAccountTransfer(accountTo);
+                }
+            }
+
+            validateAmount(accountTransfer, totalAmount, response);
+        } else {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
+
+    private void validateAmount(Account accountTransfer, double totalAmount, TellerResponse response) throws ForbiddenException {
+        if (accountTransfer.getAmount() >= totalAmount) {
+            updateTransferOwnerAccount(accountTransfer, totalAmount);
+            response.setCode(ResponseCode.SUCCESS_TRANSFER.getCode());
+            response.setStatus(ResponseCode.SUCCESS_TRANSFER.getDesc());
+        } else {
+            throw new ForbiddenException(ResponseCode.NOT_FOUND.getCode(), ResponseCode.NOT_FOUND.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private static void handleExceptionError() throws CommonException {
+        try {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        } catch (CommonException e) {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @SneakyThrows
+    private void filterAccountAndUpdateToAccountTransfer(TransferToAccountRequest accountTo) throws CommonException {
+        Account accountToUpdate = fetchAccount(accountTo.getToAccountId());
+        if (Objects.nonNull(accountToUpdate)) {
+            updateRecipientAccount(accountTo, accountToUpdate);
+        } else {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private static double calculateAmountTransToAccounts(TransferRequest request) {
+        return request.getTransferToAccountRequestList()
                 .stream()
                 .mapToDouble(TransferToAccountRequest::getAmount)
                 .sum();
+    }
 
-        Account accountTransfer = fetchAccount(request.getFromAccountId());
-
-        if (Objects.nonNull(accountTransfer) && accountTransfer.getAccountId().equals(request.getFromAccountId())) {
-            if (accountTransfer.getAmount() >= totalAmount) {
-                request.getTransferToAccountRequestList().forEach(accountTo -> {
-                    Account accountToUpdate = fetchAccount(accountTo.getToAccountId());
-                    if (accountToUpdate != null) {
-                        log.info("Before update (toAccountId)): {}", accountToUpdate.getAmount());
-                        accountToUpdate.setAmount(accountToUpdate.getAmount() + accountTo.getAmount());
-                        accountRepository.save(accountToUpdate);
-                        log.info("After update (toAccountId): {}", accountToUpdate.getAmount());
-
-                    } else {
-                        log.info("Account not found for toAccountId:: {}", accountTo.getToAccountId());
-
-                    }
-                });
-
-                log.info("Before update (fromAccountId): {}", accountTransfer.getAmount());
-                accountTransfer.setAmount(accountTransfer.getAmount() - totalAmount);
-                accountRepository.save(accountTransfer);
-                log.info("After update (fromAccountId): {}", accountTransfer.getAmount());
-
-                response.setCode(ResponseCode.SUCCESS_TRANSFER.getCode());
-                response.setStatus(ResponseCode.SUCCESS_TRANSFER.getDesc());
-            } else {
-                response.setCode(ResponseCode.NOT_FOUND.getCode());
-                response.setStatus(ResponseCode.NOT_FOUND.getDesc());
-                log.info("Insufficient balance in fromAccountId: {}", request.getFromAccountId());
-            }
-        } else {
-            response.setCode(ResponseCode.FAILED.getCode());
-            response.setStatus(ResponseCode.FAILED.getDesc());
-            log.info("Invalid fromAccountId: {}", request.getFromAccountId());
+    private void validateTransfer(double amount, String accountId, Account accountTransfer) throws CommonException {
+        if (amount <= 0) {
+            throw new CommonException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
 
+        if (StringUtil.isNullOrEmpty(accountId)) {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
 
-        return response;
+        if (Objects.isNull(accountTransfer) || !accountId.equals(accountTransfer.getAccountId())) {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void updateRecipientAccount(TransferToAccountRequest accountTo, Account accountToUpdate) {
+        accountToUpdate.setAmount(accountToUpdate.getAmount() + accountTo.getAmount());
+        accountToUpdate.setUpdateDate(new Date());
+        accountRepository.save(accountToUpdate);
+    }
+
+    private void updateTransferOwnerAccount(Account accountTransfer, double totalAmount) {
+        accountTransfer.setAmount(accountTransfer.getAmount() - totalAmount);
+        accountTransfer.setUpdateDate(getCalendarDateWithoutTime());
+        accountRepository.save(accountTransfer);
     }
 
     private Account fetchAccount(String accountId) {

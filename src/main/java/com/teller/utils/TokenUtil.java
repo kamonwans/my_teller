@@ -1,14 +1,18 @@
 package com.teller.utils;
 
+import com.teller.constant.ResponseCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
+
+import static org.apache.kafka.common.security.JaasUtils.SERVICE_NAME;
 
 @Component
 public class TokenUtil {
@@ -18,7 +22,6 @@ public class TokenUtil {
 
 
     public String generateToken(String crmId) {
-        System.out.println("Generated Secret Key: " + generateSecretKey());
         return Jwts.builder()
                 .setSubject(crmId)
                 .setIssuedAt(new Date())
@@ -27,7 +30,7 @@ public class TokenUtil {
                 .compact();
     }
 
-    public String validateToken(String token) {
+    public String validateToken(String token) throws CommonException {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
@@ -39,7 +42,7 @@ public class TokenUtil {
             }
             return claims.getSubject();
         } catch (JwtException e) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new CommonException(ResponseCode.INVALID_TOKEN.getCode(), ResponseCode.INVALID_TOKEN.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
     }
 

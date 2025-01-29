@@ -5,6 +5,8 @@ import com.teller.model.Account;
 import com.teller.model.TellerResponse;
 import com.teller.model.WithdrawRequest;
 import com.teller.repository.AccountRepository;
+import com.teller.utils.CommonException;
+import com.teller.utils.ForbiddenException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,14 +33,14 @@ class WithdrawServiceTest {
 
 
     @Test
-    void withdraw_Success() {
+    void withdraw_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
         TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
         Assertions.assertNotNull(withdraw);
     }
 
     @Test
-    void withdraw_not_found_Success() {
+    void withdraw_not_found_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 500.00)).when(accountRepository).findByAccountId(any());
         TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
         Assertions.assertEquals(ResponseCode.NOT_FOUND.getCode(), withdraw.getCode());
@@ -46,7 +48,7 @@ class WithdrawServiceTest {
     }
 
     @Test
-    void withdraw_failed_Success() {
+    void withdraw_failed_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567891", 500.00)).when(accountRepository).findByAccountId(any());
         TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
         Assertions.assertEquals(ResponseCode.FAILED.getCode(), withdraw.getCode());
@@ -54,7 +56,7 @@ class WithdrawServiceTest {
     }
 
     @Test
-    void withdraw_invalid_amount_Success() {
+    void withdraw_invalid_amount_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 500.00)).when(accountRepository).findByAccountId(any());
         TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(0));
         Assertions.assertEquals(ResponseCode.INVALID_AMOUNT.getCode(), withdraw.getCode());
