@@ -20,7 +20,6 @@ public class AuthenController {
         return ResponseEntity.ok("Bearer " + token);
     }
 
-
     @PostMapping("/encryption")
     public ResponseEntity<String> encryptionAmount(@RequestBody String amount) {
         String encryptAmount = encryptAmountUtils.encryptAmount(amount);

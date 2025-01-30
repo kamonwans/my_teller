@@ -8,4 +8,5 @@ import lombok.Setter;
 public class TellerResponse<T>  {
     private String code;
     private String status;
+    private T data;
 }

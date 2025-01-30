@@ -2,6 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AmountModel;
 import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
@@ -26,22 +27,24 @@ public class DepositService {
     private final AccountRepository accountRepository;
     private static final String SERVICE_NAME = "teller-service";
 
-    public TellerResponse deposit(DepositRequest request) throws CommonException, ForbiddenException, ParseException {
+    public AmountModel deposit(DepositRequest request) throws CommonException, ForbiddenException {
 
+        AmountModel amountModel = new AmountModel();
         Account accountDeposit = accountRepository.findByAccountId(request.getAccountId());
         validateDepositRequest(request.getAmount(), request.getAccountId(), accountDeposit);
-
         updateDeposit(accountDeposit, request.getAmount());
-        return createResponse(ResponseCode.SUCCESS_DEPOSIT.getCode(), ResponseCode.SUCCESS_DEPOSIT.getDesc());
+        Account depositResponse = accountRepository.findByAccountId(request.getAccountId());
+        amountModel.setAmount(String.valueOf(depositResponse.getAmount()));
+        return amountModel;
     }
 
     private void validateDepositRequest(double amount, String accountId, Account accountDeposit) throws CommonException, ForbiddenException {
-        if (amount <= 0) {
-            throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
-        }
-
         if (StringUtil.isNullOrEmpty(accountId)) {
             throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+
+        if (amount <= 0) {
+            throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
         }
 
         if (Objects.isNull(accountDeposit) || !accountId.equals(accountDeposit.getAccountId())) {
@@ -49,18 +52,11 @@ public class DepositService {
         }
     }
 
-    private void updateDeposit(Account accountDeposit, double amount) throws ParseException {
+    private void updateDeposit(Account accountDeposit, double amount) {
         log.info("Before withdrawal: {}", accountDeposit.getAmount());
         accountDeposit.setAmount(accountDeposit.getAmount() + amount);
         accountDeposit.setUpdateDate(getCalendarDateWithoutTime());
         accountRepository.save(accountDeposit);
         log.info("After withdrawal: {}", accountDeposit.getAmount());
-    }
-
-    private TellerResponse createResponse(String code, String status) {
-        TellerResponse response = new TellerResponse();
-        response.setCode(code);
-        response.setStatus(status);
-        return response;
     }
 }

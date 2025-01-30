@@ -2,7 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
-import com.teller.model.TellerResponse;
+import com.teller.model.AmountModel;
 import com.teller.model.WithdrawRequest;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
@@ -23,11 +23,14 @@ public class WithdrawService {
     private final AccountRepository accountRepository;
     private static final String SERVICE_NAME = "teller-service";
 
-    public TellerResponse withdraw(WithdrawRequest request) throws ForbiddenException, CommonException {
+    public AmountModel withdraw(WithdrawRequest request) throws ForbiddenException, CommonException {
+        AmountModel amountModel = new AmountModel();
         Account accountTransfer = accountRepository.findByAccountId(request.getAccountId());
         validateWithdrawRequest(request, accountTransfer);
         updateWithdrawal(accountTransfer, request.getAmount());
-        return createResponse(ResponseCode.SUCCESS_WITHDRAW.getCode(), ResponseCode.SUCCESS_WITHDRAW.getDesc());
+        Account withdrawResponse = accountRepository.findByAccountId(request.getAccountId());
+        amountModel.setAmount(String.valueOf(withdrawResponse.getAmount()));
+        return amountModel;
     }
 
     private void validateWithdrawRequest(WithdrawRequest request, Account accountTransfer) throws ForbiddenException, CommonException {
@@ -49,12 +52,4 @@ public class WithdrawService {
         accountRepository.save(accountTransfer);
         log.info("After withdrawal: {}", accountTransfer.getAmount());
     }
-
-    private TellerResponse createResponse(String code, String message) {
-        TellerResponse response = new TellerResponse();
-        response.setCode(code);
-        response.setStatus(message);
-        return response;
-    }
-
 }

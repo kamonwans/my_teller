@@ -8,8 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
-import java.security.SecureRandom;
-import java.util.Base64;
+
 import java.util.Date;
 
 import static org.apache.kafka.common.security.JaasUtils.SERVICE_NAME;
@@ -19,7 +18,6 @@ public class TokenUtil {
     private static final long EXPIRATION_TIME = 1000 * 60 * 10;
     @Value("${jwt.secret-key}")
     private String secretKey;
-
 
     public String generateToken(String crmId) {
         return Jwts.builder()
@@ -42,14 +40,7 @@ public class TokenUtil {
             }
             return claims.getSubject();
         } catch (JwtException e) {
-            throw new CommonException(ResponseCode.INVALID_TOKEN.getCode(), ResponseCode.INVALID_TOKEN.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+            throw new CommonException(ResponseCode.TOKEN_EXPIRE.getCode(), ResponseCode.TOKEN_EXPIRE.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
-    }
-
-    public static String generateSecretKey() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] key = new byte[32];
-        secureRandom.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
     }
 }

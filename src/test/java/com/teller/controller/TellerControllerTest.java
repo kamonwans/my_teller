@@ -1,6 +1,7 @@
 package com.teller.controller;
 
 import com.teller.constant.ResponseCode;
+import com.teller.model.AmountModel;
 import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.model.TransferRequest;
@@ -48,7 +49,7 @@ class TellerControllerTest {
         TellerResponse tellerResponse = mockTellerDepositSuccess();
         doReturn(true).when(validateTokenService).validateToken(anyString());
         doReturn(tellerResponse).when(depositService).deposit(any());
-        ResponseEntity<TellerResponse<TellerResponse>> responseEntity = tellerController.deposit("Bearer N3T_OB9Q0", new DepositRequest());
+        ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.deposit("Bearer N3T_OB9Q0", new DepositRequest());
         Assertions.assertNotNull(responseEntity);
     }
 
@@ -57,7 +58,7 @@ class TellerControllerTest {
         TellerResponse tellerResponse = mockTellerDepositSuccess();
         doReturn(tellerResponse).when(withdrawService).withdraw(any());
         doReturn(true).when(validateTokenService).validateToken(anyString());
-        ResponseEntity<TellerResponse<TellerResponse>> responseEntity = tellerController.withdraw("Bearer N3T_OB9Q0", new WithdrawRequest());
+        ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.withdraw("Bearer N3T_OB9Q0", new WithdrawRequest());
         Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assertions.assertNotNull(responseEntity);
     }
@@ -67,7 +68,7 @@ class TellerControllerTest {
         TellerResponse tellerResponse = mockTellerDepositSuccess();
         doReturn(true).when(validateTokenService).validateToken(anyString());
         doReturn(tellerResponse).when(transferService).transfer(any());
-        ResponseEntity<TellerResponse<TellerResponse>> responseEntity = tellerController.transfer("Bearer N3T_OB9Q0", new TransferRequest());
+        ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.transfer("Bearer N3T_OB9Q0", new TransferRequest());
         Assertions.assertNotNull(responseEntity);
     }
 

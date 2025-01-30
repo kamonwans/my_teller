@@ -2,6 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AmountModel;
 import com.teller.model.TellerResponse;
 import com.teller.model.TransferRequest;
 import com.teller.model.TransferToAccountRequest;
@@ -27,29 +28,38 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private static final String SERVICE_NAME = "teller-service";
 
-    public TellerResponse transfer(TransferRequest request) throws ForbiddenException, CommonException {
+    public AmountModel transfer(TransferRequest request) throws ForbiddenException, CommonException {
         TellerResponse response = new TellerResponse();
-
+        AmountModel amountModel = new AmountModel();
         double totalAmount = calculateAmountTransToAccounts(request);
         Account accountTransfer = fetchAccount(request.getFromAccountId());
         validateTransfer(totalAmount, request.getFromAccountId(), accountTransfer);
 
-        if (accountTransfer.getAccountId().equals(request.getFromAccountId())) {
-            for (TransferToAccountRequest accountTo : request.getTransferToAccountRequestList()) {
-                Account accountToUpdate = fetchAccount(accountTo.getToAccountId());
-                if (Objects.isNull(accountToUpdate)) {
-                    handleExceptionError();
-                } else {
-                    filterAccountAndUpdateToAccountTransfer(accountTo);
-                }
-            }
-
-            validateAmount(accountTransfer, totalAmount, response);
-        } else {
-            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        for (TransferToAccountRequest accountTo : request.getTransferToAccountRequestList()) {
+            handleInvalidAmount(accountTo);
+            Account accountToUpdate = fetchAccount(accountTo.getToAccountId());
+            processTransferToAccount(accountTo, accountToUpdate);
         }
 
-        return response;
+        validateAmount(accountTransfer, totalAmount, response);
+        Account transferResponse = fetchAccount(request.getFromAccountId());
+        amountModel.setAmount(String.valueOf(transferResponse.getAmount()));
+        return amountModel;
+    }
+
+    private static void handleInvalidAmount(TransferToAccountRequest accountTo) throws ForbiddenException {
+        if (accountTo.getAmount() <= 0) {
+            throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
+
+        }
+    }
+
+    private void processTransferToAccount(TransferToAccountRequest accountTo, Account accountToUpdate) throws CommonException {
+        if (Objects.isNull(accountToUpdate)) {
+            handleExceptionError();
+        } else {
+            filterAccountAndUpdateToAccountTransfer(accountTo);
+        }
     }
 
     private void validateAmount(Account accountTransfer, double totalAmount, TellerResponse response) throws ForbiddenException {
@@ -103,7 +113,7 @@ public class TransferService {
 
     private void updateRecipientAccount(TransferToAccountRequest accountTo, Account accountToUpdate) {
         accountToUpdate.setAmount(accountToUpdate.getAmount() + accountTo.getAmount());
-        accountToUpdate.setUpdateDate(new Date());
+        accountToUpdate.setUpdateDate(getCalendarDateWithoutTime());
         accountRepository.save(accountToUpdate);
     }
 
