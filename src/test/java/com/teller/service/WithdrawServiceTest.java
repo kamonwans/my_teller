@@ -2,6 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AmountModel;
 import com.teller.model.TellerResponse;
 import com.teller.model.WithdrawRequest;
 import com.teller.repository.AccountRepository;
@@ -39,12 +40,12 @@ class WithdrawServiceTest {
     @Test
     void withdraw_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
+        AmountModel withdraw = withdrawService.withdraw(mockWithdrawRequest(1000.00));
         Assertions.assertNotNull(withdraw);
     }
 
     @Test
-    void withdraw_not_found_Success() throws ForbiddenException, CommonException {
+    void withdraw_not_found_Success() {
         doReturn(mockAccountData("1234567899", 500.00)).when(accountRepository).findByAccountId(any());
         ForbiddenException exception = assertThrows(ForbiddenException.class, () -> {
             withdrawService.withdraw(mockWithdrawRequest(1000.00));
@@ -54,7 +55,7 @@ class WithdrawServiceTest {
     }
 
     @Test
-    void withdraw_failed_Success() throws ForbiddenException, CommonException {
+    void withdraw_failed_Success() {
         doReturn(mockAccountData("1234567891", 500.00)).when(accountRepository).findByAccountId(any());
         Exception exception = assertThrows(CommonException.class, () -> {
             withdrawService.withdraw(mockWithdrawRequest(1000.00));

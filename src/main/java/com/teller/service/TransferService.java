@@ -41,7 +41,7 @@ public class TransferService {
             processTransferToAccount(accountTo, accountToUpdate);
         }
 
-        validateAmount(accountTransfer, totalAmount, response);
+        updateAmountAccountFrom(accountTransfer, totalAmount, response);
         Account transferResponse = fetchAccount(request.getFromAccountId());
         amountModel.setAmount(String.valueOf(transferResponse.getAmount()));
         return amountModel;
@@ -62,14 +62,10 @@ public class TransferService {
         }
     }
 
-    private void validateAmount(Account accountTransfer, double totalAmount, TellerResponse response) throws ForbiddenException {
-        if (accountTransfer.getAmount() >= totalAmount) {
-            updateTransferOwnerAccount(accountTransfer, totalAmount);
-            response.setCode(ResponseCode.SUCCESS_TRANSFER.getCode());
-            response.setStatus(ResponseCode.SUCCESS_TRANSFER.getDesc());
-        } else {
-            throw new ForbiddenException(ResponseCode.NOT_FOUND.getCode(), ResponseCode.NOT_FOUND.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
-        }
+    private void updateAmountAccountFrom(Account accountTransfer, double totalAmount, TellerResponse response) throws ForbiddenException {
+        updateTransferOwnerAccount(accountTransfer, totalAmount);
+        response.setCode(ResponseCode.SUCCESS_TRANSFER.getCode());
+        response.setStatus(ResponseCode.SUCCESS_TRANSFER.getDesc());
     }
 
     private static void handleExceptionError() throws CommonException {
@@ -97,18 +93,19 @@ public class TransferService {
                 .sum();
     }
 
-    private void validateTransfer(double amount, String accountId, Account accountTransfer) throws CommonException {
-        if (amount <= 0) {
+    private void validateTransfer(double totalAmount, String accountId, Account accountTransfer) throws CommonException, ForbiddenException {
+        if (Objects.isNull(accountTransfer) || StringUtil.isNullOrEmpty(accountId)) {
+            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        }
+
+        if (totalAmount <= 0) {
             throw new CommonException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
 
-        if (StringUtil.isNullOrEmpty(accountId)) {
-            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
+        if (accountTransfer.getAmount() < totalAmount) {
+            throw new ForbiddenException(ResponseCode.NOT_FOUND.getCode(), ResponseCode.NOT_FOUND.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
         }
 
-        if (Objects.isNull(accountTransfer) || !accountId.equals(accountTransfer.getAccountId())) {
-            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
-        }
     }
 
     private void updateRecipientAccount(TransferToAccountRequest accountTo, Account accountToUpdate) {

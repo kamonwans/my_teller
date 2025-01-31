@@ -2,6 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AmountModel;
 import com.teller.model.DepositRequest;
 import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
@@ -41,8 +42,8 @@ class DepositServiceTest {
     @Test
     void deposit_Success() throws CommonException, ForbiddenException, ParseException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse withdraw = depositService.deposit(mockDepositRequest(1000.00));
-        Assertions.assertNotNull(withdraw);
+        AmountModel deposit = depositService.deposit(mockDepositRequest(1000.00));
+        Assertions.assertNotNull(deposit);
     }
 
     @Test

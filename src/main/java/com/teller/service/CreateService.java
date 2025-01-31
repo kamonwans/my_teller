@@ -3,7 +3,6 @@ package com.teller.service;
 import com.teller.model.Account;
 import com.teller.model.AccountRequest;
 import com.teller.repository.AccountRepository;
-import com.teller.utils.CommonException;
 import com.teller.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,7 @@ public class CreateService {
 
     private final AccountRepository accountRepository;
 
-    public void create(AccountRequest request) throws CommonException {
+    public void create(AccountRequest request) {
         Account account = new Account();
         account.setId(UUID.randomUUID().toString());
         account.setAccountId(request.getAccountId());
@@ -29,5 +28,4 @@ public class CreateService {
         account.setUpdateDate(CommonUtils.getCalendarDateWithoutTime());
         accountRepository.save(account);
     }
-
 }

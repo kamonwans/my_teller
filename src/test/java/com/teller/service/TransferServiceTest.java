@@ -2,6 +2,7 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AmountModel;
 import com.teller.model.TellerResponse;
 import com.teller.model.TransferRequest;
 import com.teller.model.TransferToAccountRequest;
@@ -43,7 +44,7 @@ class TransferServiceTest {
     @Test
     void transfer_Success() throws ForbiddenException, CommonException {
         doReturn(mockAccountData("1234567899", 2000.00)).when(accountRepository).findByAccountId(any());
-        TellerResponse transfer = transferService.transfer(mockTransferRequest());
+        AmountModel transfer = transferService.transfer(mockTransferRequest());
         Assertions.assertNotNull(transfer);
     }
 

@@ -14,11 +14,7 @@ _
 /src/main/java/com/teller/TellerApplication.java,b/6/b6b20649540b47b0e94113ee56dabbaaf7eb9e02
 a
 1src/main/java/com/teller/model/ErrorResponse.java,2/7/27efcc0ac28846c576afc8de9f2066b7df20d98a
-l
-<src/main/java/com/teller/model/TransferToAccountRequest.java,a/f/afff8905b5d312f6068357e3fe058901a10f7605
 <
 build.gradle,f/0/f07866736216be0ee2aba49e392191aeae700a35
 m
 =src/test/java/com/teller/controller/AuthenControllerTest.java,2/7/27c6409e0af121f51598f512a716da672c852074
-c
-3src/main/java/com/teller/model/TransferRequest.java,1/0/10ec0151331864cba3cecc35e39616926144cbc7

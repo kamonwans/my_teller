@@ -17,7 +17,6 @@ import com.teller.service.ValidateTokenService;
 import com.teller.service.WithdrawService;
 import com.teller.utils.CommonException;
 import com.teller.utils.ForbiddenException;
-import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,8 +89,8 @@ public class TellerController {
         try {
             validate.validateToken(token);
             AmountModel transfer = transferService.transfer(request);
-            tellerResponse.setStatus(ResponseCode.SUCCESS_DEPOSIT.getDesc());
-            tellerResponse.setCode(ResponseCode.SUCCESS_DEPOSIT.getCode());
+            tellerResponse.setStatus(ResponseCode.SUCCESS_TRANSFER.getDesc());
+            tellerResponse.setCode(ResponseCode.SUCCESS_TRANSFER.getCode());
             tellerResponse.setData(transfer);
             return ResponseEntity.ok().body(tellerResponse);
 

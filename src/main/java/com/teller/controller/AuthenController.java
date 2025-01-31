@@ -14,7 +14,7 @@ public class AuthenController {
     private final TokenUtil tokenUtil;
     private final EncryptAmountUtils encryptAmountUtils;
 
-    @PostMapping("/login")
+    @PostMapping("/token")
     public ResponseEntity<String> login(@RequestBody String crmId) {
         String token = tokenUtil.generateToken(crmId);
         return ResponseEntity.ok("Bearer " + token);

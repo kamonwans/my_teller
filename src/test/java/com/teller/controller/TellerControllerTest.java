@@ -46,17 +46,17 @@ class TellerControllerTest {
 
     @Test
     void deposit_Success() throws Exception {
-        TellerResponse tellerResponse = mockTellerDepositSuccess();
+        TellerResponse<AmountModel> amountModelTellerResponse = mockTellerDepositSuccess();
         doReturn(true).when(validateTokenService).validateToken(anyString());
-        doReturn(tellerResponse).when(depositService).deposit(any());
+        doReturn(amountModelTellerResponse.getData()).when(depositService).deposit(any());
         ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.deposit("Bearer N3T_OB9Q0", new DepositRequest());
         Assertions.assertNotNull(responseEntity);
     }
 
     @Test
     void withdraw_Success() throws Exception {
-        TellerResponse tellerResponse = mockTellerDepositSuccess();
-        doReturn(tellerResponse).when(withdrawService).withdraw(any());
+        TellerResponse<AmountModel> amountModelTellerResponse = mockTellerDepositSuccess();
+        doReturn(amountModelTellerResponse.getData()).when(withdrawService).withdraw(any());
         doReturn(true).when(validateTokenService).validateToken(anyString());
         ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.withdraw("Bearer N3T_OB9Q0", new WithdrawRequest());
         Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -65,15 +65,15 @@ class TellerControllerTest {
 
     @Test
     void transfer_Success() throws Exception {
-        TellerResponse tellerResponse = mockTellerDepositSuccess();
+        TellerResponse<AmountModel> amountModelTellerResponse = mockTellerDepositSuccess();
         doReturn(true).when(validateTokenService).validateToken(anyString());
-        doReturn(tellerResponse).when(transferService).transfer(any());
+        doReturn(amountModelTellerResponse.getData()).when(transferService).transfer(any());
         ResponseEntity<TellerResponse<AmountModel>> responseEntity = tellerController.transfer("Bearer N3T_OB9Q0", new TransferRequest());
         Assertions.assertNotNull(responseEntity);
     }
 
-    private static TellerResponse mockTellerDepositSuccess() {
-        TellerResponse tellerResponse = new TellerResponse();
+    private static TellerResponse<AmountModel> mockTellerDepositSuccess() {
+        TellerResponse<AmountModel> tellerResponse = new TellerResponse<>();
         tellerResponse.setCode(ResponseCode.SUCCESS_DEPOSIT.getCode());
         tellerResponse.setStatus(ResponseCode.SUCCESS_DEPOSIT.getDesc());
         return tellerResponse;

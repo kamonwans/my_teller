@@ -7,6 +7,7 @@ import com.teller.model.WithdrawRequest;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
 import com.teller.utils.ForbiddenException;
+import io.netty.util.internal.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class WithdrawService {
     }
 
     private void validateWithdrawRequest(WithdrawRequest request, Account accountTransfer) throws ForbiddenException, CommonException {
-        if (Objects.isNull(accountTransfer) || !accountTransfer.getAccountId().equals(request.getAccountId())) {
+        if (Objects.isNull(accountTransfer) || StringUtil.isNullOrEmpty(request.getAccountId()) ) {
             throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
         if (request.getAmount() <= 0) {

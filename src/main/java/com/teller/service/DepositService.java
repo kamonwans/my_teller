@@ -2,9 +2,9 @@ package com.teller.service;
 
 import com.teller.constant.ResponseCode;
 import com.teller.model.Account;
+import com.teller.model.AccountIdModel;
 import com.teller.model.AmountModel;
 import com.teller.model.DepositRequest;
-import com.teller.model.TellerResponse;
 import com.teller.repository.AccountRepository;
 import com.teller.utils.CommonException;
 import com.teller.utils.ForbiddenException;
@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static com.teller.utils.CommonUtils.getCalendarDateWithoutTime;
@@ -39,7 +40,7 @@ public class DepositService {
     }
 
     private void validateDepositRequest(double amount, String accountId, Account accountDeposit) throws CommonException, ForbiddenException {
-        if (StringUtil.isNullOrEmpty(accountId)) {
+        if (StringUtil.isNullOrEmpty(accountId) || Objects.isNull(accountDeposit)) {
             throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
         }
 
@@ -47,9 +48,6 @@ public class DepositService {
             throw new ForbiddenException(ResponseCode.INVALID_AMOUNT.getCode(), ResponseCode.INVALID_AMOUNT.getDesc(), SERVICE_NAME, HttpStatus.FORBIDDEN);
         }
 
-        if (Objects.isNull(accountDeposit) || !accountId.equals(accountDeposit.getAccountId())) {
-            throw new CommonException(ResponseCode.FAILED.getCode(), ResponseCode.FAILED.getDesc(), SERVICE_NAME, HttpStatus.BAD_REQUEST);
-        }
     }
 
     private void updateDeposit(Account accountDeposit, double amount) {
